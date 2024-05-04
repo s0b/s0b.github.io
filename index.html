@@ -2,59 +2,82 @@
 <html lang="en">
   <head>
     <title>diego.sh</title>
-    <link rel="icon" href="favicon.svg" />
+    <link rel="icon" href="favicon.svg">
     <style>
       html,
       body {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+      }
+
+      html, body,
+      #svg-container, svg {
+        width: 100%;
         height: 100%;
       }
 
       #svg-container {
-        display: flex;
-        align-items: center;
-        height: 100%;
+        max-width: 500px;
+        max-height: 500px;
+        margin: 2vw;
       }
 
-      svg {
-        margin: 0 auto;
-        display: block;
+      g {
+        transform: translate(250px, 250px);
+        fill: none;
+        stroke-width: 2;
+        stroke-linejoin: round;
+      }
+
+      path {
+        mix-blend-mode: darken;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #000;
+        }
+
+        path {
+          mix-blend-mode: lighten;
+        }
       }
     </style>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
   <body>
     <div id="svg-container">
-      <svg width="900" height="500"></svg>
+      <svg viewBox="0 0 500 500">
+        <g></g>
+      </svg>
     </div>
 
-    <script>
-      var svg = d3.select('svg'),
-        width = +svg.attr('width'),
-        height = +svg.attr('height'),
-        angles = d3.range(0, 2 * Math.PI, Math.PI / 100);
+    <script type="module">
+      import { select, radialLine, curveLinearClosed, now, range, timer } from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-      var path = svg.append('g')
-        .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')')
-        .attr('fill', 'none')
-        .attr('stroke-width', 2)
-        .attr('stroke-linejoin', 'round')
-        .selectAll('path')
-        .data(['cyan', 'magenta', 'yellow'])
-        .enter().append('path')
-        .attr('stroke', function(d) { return d; })
-        .style('mix-blend-mode', 'darken')
-        .datum(function(d, i) {
-          return d3.radialLine()
-            .curve(d3.curveLinearClosed)
-            .angle(function(a) { return a; })
-            .radius(function(a) {
-              var t = d3.now() / 2000;
-              return 200 + Math.cos(a * 10 - i * 2 * Math.PI / 3 + t) * Math.pow((1 + Math.cos(a - t)) / 2,
-                7) * 16;
-            });
+      const path = select('g').selectAll('path')
+      .data(['cyan', 'magenta', 'yellow'])
+      .enter().append('path')
+      .attr('stroke', function (d) {
+        return d;
+      })
+      .datum(function (d, i) {
+        return radialLine()
+        .curve(curveLinearClosed)
+        .angle(function (a) {
+          return a;
+        })
+        .radius(function (a) {
+          const t = now() / 2000;
+          return 200 + Math.cos(a * 10 - i * 2 * Math.PI / 3 + t) * Math.pow((1 + Math.cos(a - t)) / 2, 7) * 16;
         });
+      });
 
-      d3.timer(function() {
+      const angles = range(0, 2 * Math.PI, Math.PI / 100);
+
+      timer(function() {
         path.attr('d', function(d) {
           return d(angles);
         });
